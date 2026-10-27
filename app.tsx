@@ -1,8 +1,7 @@
 import { useEffect, useMemo, useRef } from "react";
 import { Markdown, definePluginApp, experimental_SourceCode as SourceCode, experimental_usePluginId, useSettings } from "@get-bb/plugin-sdk/app";
-import { LEADING_TOKENS, TEXT_TOKENS, buildCss, type TypographySettings } from "./css.ts";
+import { COARSE_QUERY, LEADING_TOKENS, TEXT_TOKENS, buildCss, type TypographySettings } from "./css.ts";
 
-const COARSE_QUERY = "(width<=767px) and (pointer:coarse)";
 const TEXT_KEYS = ["uiFont", "uiFeatures", "codeFont", "codeFeatures"] as const;
 const NUMBER_KEYS = ["uiSize", "uiLineHeight", "uiBold", "codeSize", "codeLineHeight", "codeBold"] as const;
 

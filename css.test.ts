@@ -72,6 +72,18 @@ test("buildCss applies bold weights and code line height", () => {
   assert.match(css, /--diffs-line-height:calc\(var\(--diffs-font-size\) \* 1\.6\)!important/);
 });
 
+test("buildCss reaches the ProseMirror composer", () => {
+  const css = buildCss({ uiFeatures: "ss06 ss07", uiLineHeight: 1.8 }, { "--leading-relaxed": "1.625" });
+  assert.match(css, /\.ProseMirror\{font-feature-settings:"ss06", "ss07", "liga" 0!important;line-height:1\.88307!important\}/);
+  assert.match(buildCss({ uiFeatures: "liga, ss01" }), /\.ProseMirror\{font-feature-settings:"liga", "ss01"!important\}/);
+});
+
+test("buildCss keeps phone inputs at 16px or more", () => {
+  const css = buildCss({ uiSize: 14 }, { "--text-sm": ".9375rem", "--text-base": "1rem" });
+  assert.match(css, /@media \(width<=767px\) and \(pointer:coarse\)\{:root\{--text-base:max\(1rem, calc\(1rem \* 0\.93333\)\)!important\}\}/);
+  assert.doesNotMatch(buildCss({ uiSize: 16 }, { "--text-sm": ".9375rem", "--text-base": "1rem" }), /@media/);
+});
+
 test("buildCss ignores out-of-range sizes", () => {
   assert.equal(buildCss({ codeSize: 100, uiSize: 2, uiLineHeight: 5, uiBold: 1000 }, { "--text-sm": ".8125rem" }), "");
 });

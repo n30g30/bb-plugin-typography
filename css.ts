@@ -20,6 +20,7 @@ export const LIMITS = {
 export const TEXT_TOKENS = ["--text-2xs", "--text-xs", "--text-sm", "--text-base", "--text-lg", "--text-xl", "--text-2xl"];
 export const LEADING_TOKENS = ["--leading-tight", "--leading-snug", "--leading-normal", "--leading-relaxed"];
 const BASE_TOKEN = "--text-sm";
+export const COARSE_QUERY = "(width<=767px) and (pointer:coarse)";
 // Chat and markdown body text use leading-relaxed, so the interface line height is measured against it.
 const BODY_LEADING = "--leading-relaxed";
 const GENERICS = new Set(["serif", "sans-serif", "monospace", "cursive", "fantasy", "system-ui", "ui-serif", "ui-sans-serif", "ui-monospace", "ui-rounded", "math", "emoji", "fangsong"]);
@@ -91,7 +92,11 @@ export function buildCss(settings: TypographySettings, tokens: Record<string, st
   const leadingScale = uiLineHeight !== null ? ratio(uiLineHeight / bodyLeading) : 1;
   for (const token of TEXT_TOKENS) {
     const value = tokens[token];
-    if (value && sizeScale !== 1) root.push(`${token}:calc(${value} * ${sizeScale})`);
+    if (value && sizeScale !== 1) {
+      root.push(`${token}:calc(${value} * ${sizeScale})`);
+      // On phones bb sizes inputs and the composer with --text-base; iOS zooms into any focused field under 16px.
+      if (token === "--text-base" && sizeScale < 1) rules.push(`@media ${COARSE_QUERY}{:root{--text-base:max(1rem, calc(${value} * ${sizeScale}))!important}}`);
+    }
     const lineHeight = tokens[`${token}--line-height`];
     if (!lineHeight) continue;
     // Unitless line heights already follow the font size.
@@ -104,6 +109,13 @@ export function buildCss(settings: TypographySettings, tokens: Record<string, st
     }
     rules.push(`html{line-height:${ratio(1.5 * leadingScale)}!important}`);
   }
+
+  // The composer is a ProseMirror editor: its stylesheet turns ligatures off (caret placement) and bb fixes its leading at 1.7.
+  const composer = [
+    uiFeatures && uiFeatures !== "normal" && `font-feature-settings:${uiFeatures}${/"liga"/.test(uiFeatures) ? "" : ', "liga" 0'}!important`,
+    leadingScale !== 1 && `line-height:${ratio(1.7 * leadingScale)}!important`,
+  ].filter(Boolean);
+  if (composer.length) rules.push(`.ProseMirror{${composer.join(";")}}`);
 
   const uiBold = pick(settings.uiBold, "bold");
   if (uiBold !== null) {
